@@ -5,6 +5,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import streamlit as st
+import boto3
 
 def get_product_info(url):
     headers = {
@@ -119,6 +120,19 @@ if search_query:
             ## Save to Excel
             file_name = save_to_excel(all_data)
             st.success(f'Los datos se guardaron en {file_name}')
+
+            # AWS S3
+            AWS_ACCESS_KEY_ID = st.secrets['AWS_ACCESS_KEY_ID']
+            AWS_SECRET_ACCESS_KEY = st.secrets['AWS_SECRET_ACCESS_KEY']
+
+            s3 = boto3.resource('s3')
+            st.write('### conectando a AWS S3')
+            for bucket in s3.buckets.all():
+                st.write(f'Nombre del Bucket: {bucket.name}')
+
+            st.write('### Subiendo archivo a S3')
+            s3.Object('price-monitoring-2025', 'products.xlsx').upload_file(r'products.xlsx')
+            st.success('Archivo subido a S3')
         else:
             st.error('No se encontraron productos')
     else:
